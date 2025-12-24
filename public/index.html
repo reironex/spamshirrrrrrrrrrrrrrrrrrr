@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Share Boost</title>
 
-<!-- ICONS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
@@ -15,8 +14,18 @@
   --pink: #ff4fd8;
   --violet: #8b5cf6;
   --bg: #0b0614;
+  --card: rgba(255,79,216,.08);
   --text: #f5e9ff;
   --muted: #c6b6dd;
+  --border: rgba(255,79,216,.4);
+}
+
+.light-theme {
+  --bg: #f6f3ff;
+  --card: rgba(139,92,246,.12);
+  --text: #1f1235;
+  --muted: #5e4b8b;
+  --border: rgba(139,92,246,.4);
 }
 
 * { box-sizing: border-box; }
@@ -31,41 +40,57 @@ body {
   justify-content: center;
   align-items: center;
   padding: 20px;
+  transition: .3s;
 }
 
 .wrapper-container {
   max-width: 520px;
   width: 100%;
+  position: relative;
 }
 
+/* SETTINGS BUTTON */
+.theme-toggle {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--pink), var(--violet));
+  color: #fff;
+  box-shadow: 0 0 15px rgba(255,79,216,.6);
+}
+
+/* CARD */
 .container {
-  background: linear-gradient(135deg, rgba(255,79,216,.08), rgba(139,92,246,.08));
+  background: linear-gradient(135deg, var(--card), rgba(139,92,246,.08));
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 20px;
-  border: 1px solid rgba(255,79,216,.4);
+  border: 1px solid var(--border);
   box-shadow: 0 0 25px rgba(255,79,216,.15);
 }
 
 h1 {
   text-align: center;
   color: var(--pink);
-  margin-bottom: 10px;
 }
 
 h4 {
   text-align: center;
   color: var(--violet);
-  margin-bottom: 20px;
 }
 
 .step-title {
-  font-size: 14px;
-  margin-bottom: 8px;
-  color: var(--muted);
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--muted);
 }
 
 .step-title i {
@@ -79,11 +104,15 @@ h4 {
 textarea, input {
   width: 100%;
   padding: 12px;
-  background: rgba(0,0,0,.45);
+  background: rgba(0,0,0,.35);
   border: 1px solid rgba(255,255,255,.15);
   border-radius: 10px;
   color: var(--text);
-  outline: none;
+}
+
+.light-theme textarea,
+.light-theme input {
+  background: rgba(255,255,255,.8);
 }
 
 textarea {
@@ -94,6 +123,7 @@ textarea {
 textarea:focus, input:focus {
   border-color: var(--pink);
   box-shadow: 0 0 10px rgba(255,79,216,.5);
+  outline: none;
 }
 
 button {
@@ -106,23 +136,44 @@ button {
   color: #fff;
   background: linear-gradient(135deg, var(--pink), var(--violet));
   box-shadow: 0 0 15px rgba(255,79,216,.5);
-  transition: 0.2s;
-}
-
-button:hover {
-  box-shadow: 0 0 25px rgba(139,92,246,.7);
 }
 
 .small-btn {
   margin-top: 10px;
   font-size: 13px;
-  padding: 10px;
 }
 
 #detect-status {
   font-size: 12px;
   margin-top: 6px;
   text-align: center;
+}
+
+/* PROGRESS BAR */
+.progress-wrapper {
+  display: none;
+  margin-top: 14px;
+}
+
+.progress-bar {
+  height: 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.15);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--pink), var(--violet));
+  transition: width .4s ease;
+}
+
+.progress-text {
+  margin-top: 6px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--muted);
 }
 
 #result {
@@ -138,168 +189,164 @@ button:hover {
 <body>
 <div class="wrapper-container">
 
-  <div class="container">
-    <h1><i class="fa-solid fa-rocket"></i> SHARE BOOST</h1>
-    <h4>Automated Share System</h4>
+<button class="theme-toggle" onclick="toggleTheme()" id="themeIcon">
+  <i class="fa-solid fa-moon"></i>
+</button>
+
+<div class="container">
+  <h1><i class="fa-solid fa-rocket"></i> SHARE BOOST</h1>
+  <h4>Automated Share System</h4>
+</div>
+
+<div class="container">
+<form onsubmit="submitForm(event)">
+
+<div class="form-item">
+  <div class="step-title"><i class="fa-solid fa-cookie-bite"></i> STEP 1: Cookie / AppState</div>
+  <textarea id="cookie-input" oninput="autoDetect()"></textarea>
+  <div id="detect-status"></div>
+  <button type="button" class="small-btn" onclick="forceConvert()">
+    <i class="fa-solid fa-arrows-rotate"></i> Convert
+  </button>
+</div>
+
+<div class="form-item">
+  <div class="step-title"><i class="fa-solid fa-code"></i> STEP 2: Final AppState</div>
+  <textarea id="cookies"></textarea>
+</div>
+
+<div class="form-item">
+  <div class="step-title"><i class="fa-solid fa-link"></i> STEP 3: Link</div>
+  <input id="urls">
+</div>
+
+<div class="form-item">
+  <div class="step-title"><i class="fa-solid fa-bullseye"></i> STEP 4: Limit</div>
+  <input type="number" id="amounts">
+</div>
+
+<div class="form-item">
+  <div class="step-title"><i class="fa-solid fa-clock"></i> STEP 5: Delay</div>
+  <input type="number" id="intervals">
+</div>
+
+<div class="form-item">
+  <button type="submit" id="submit-button">
+    <i class="fa-solid fa-paper-plane"></i> Submit
+  </button>
+</div>
+
+<div class="progress-wrapper" id="progressBox">
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
   </div>
+  <div class="progress-text" id="progressText">Preparing...</div>
+</div>
 
-  <div class="container">
-    <form onsubmit="submitForm(event)">
+<div class="form-item">
+  <div id="result"></div>
+</div>
 
-      <!-- STEP 1 -->
-      <div class="form-item">
-        <div class="step-title">
-          <i class="fa-solid fa-cookie-bite"></i>
-          STEP 1: Paste Cookie or AppState
-        </div>
-        <textarea id="cookie-input" placeholder="Paste RAW COOKIE or APPSTATE JSON here" oninput="autoDetect()"></textarea>
-        <div id="detect-status"></div>
-        <button type="button" class="small-btn" onclick="forceConvert()">
-          <i class="fa-solid fa-arrows-rotate"></i> Convert to AppState
-        </button>
-      </div>
-
-      <!-- STEP 2 -->
-      <div class="form-item">
-        <div class="step-title">
-          <i class="fa-solid fa-code"></i>
-          STEP 2: Final AppState
-        </div>
-        <textarea id="cookies" placeholder="Final AppState will appear here"></textarea>
-      </div>
-
-      <!-- STEP 3 -->
-      <div class="form-item">
-        <div class="step-title">
-          <i class="fa-solid fa-link"></i>
-          STEP 3: Facebook Post Link
-        </div>
-        <input type="text" id="urls" placeholder="https://facebook.com/...">
-      </div>
-
-      <!-- STEP 4 -->
-      <div class="form-item">
-        <div class="step-title">
-          <i class="fa-solid fa-bullseye"></i>
-          STEP 4: Share Limit
-        </div>
-        <input type="number" id="amounts" placeholder="e.g. 100">
-      </div>
-
-      <!-- STEP 5 -->
-      <div class="form-item">
-        <div class="step-title">
-          <i class="fa-solid fa-clock"></i>
-          STEP 5: Delay (ms)
-        </div>
-        <input type="number" id="intervals" placeholder="e.g. 3000">
-      </div>
-
-      <!-- SUBMIT -->
-      <div class="form-item">
-        <button type="submit" id="submit-button">
-          <i class="fa-solid fa-paper-plane"></i> Submit Task
-        </button>
-      </div>
-
-      <div class="form-item">
-        <div id="result"></div>
-      </div>
-
-    </form>
-  </div>
+</form>
+</div>
 
 </div>
 
 <script>
-function autoDetect() {
-  const input = document.getElementById('cookie-input').value.trim();
-  const status = document.getElementById('detect-status');
-
-  if (!input) {
-    status.innerText = '';
-    return;
+/* THEME */
+function toggleTheme() {
+  document.body.classList.toggle('light-theme');
+  const i = document.getElementById('themeIcon').firstElementChild;
+  if (document.body.classList.contains('light-theme')) {
+    i.className = 'fa-solid fa-sun';
+    localStorage.setItem('theme','light');
+  } else {
+    i.className = 'fa-solid fa-moon';
+    localStorage.setItem('theme','dark');
   }
+}
+if (localStorage.getItem('theme') === 'light') toggleTheme();
+
+/* AUTO DETECT */
+function autoDetect() {
+  const v = cookie-input.value.trim();
+  const s = detect-status;
+
+  if (!v) { s.innerText=''; return; }
 
   try {
-    const parsed = JSON.parse(input);
-    if (Array.isArray(parsed)) {
-      document.getElementById('cookies').value = JSON.stringify(parsed, null, 2);
-      status.style.color = '#8bffb0';
-      status.innerText = '✔ AppState detected';
+    const j = JSON.parse(v);
+    if (Array.isArray(j)) {
+      cookies.value = JSON.stringify(j,null,2);
+      s.style.color='#4ade80';
+      s.innerText='✔ AppState detected';
       return;
     }
   } catch {}
 
-  if (input.includes('=') && input.includes(';')) {
-    document.getElementById('cookies').value =
-      JSON.stringify(convertRawCookie(input), null, 2);
-    status.style.color = '#ffb3ff';
-    status.innerText = '✔ Raw cookie detected & converted';
+  if (v.includes('=') && v.includes(';')) {
+    cookies.value = JSON.stringify(convertRawCookie(v),null,2);
+    s.style.color='#f0abfc';
+    s.innerText='✔ Raw cookie converted';
     return;
   }
 
-  status.style.color = '#ff6b6b';
-  status.innerText = '✖ Invalid format';
+  s.style.color='#f87171';
+  s.innerText='✖ Invalid format';
 }
 
-function convertRawCookie(raw) {
-  return raw.split(';').map(c => {
-    const p = c.split('=');
-    return {
-      key: p[0].trim(),
-      value: p.slice(1).join('=').trim(),
-      domain: ".facebook.com",
-      path: "/",
-      secure: true,
-      httpOnly: false
-    };
+function convertRawCookie(raw){
+  return raw.split(';').map(c=>{
+    const p=c.split('=');
+    return {key:p[0].trim(),value:p.slice(1).join('=').trim(),domain:".facebook.com",path:"/"};
   });
 }
 
-function forceConvert() {
-  const input = document.getElementById('cookie-input').value.trim();
-  if (!input) return alert('Paste cookie first');
-  document.getElementById('cookies').value =
-    JSON.stringify(convertRawCookie(input), null, 2);
+function forceConvert(){
+  cookies.value=JSON.stringify(convertRawCookie(cookie-input.value),null,2);
 }
 
-async function submitForm(event) {
-  event.preventDefault();
+/* PROGRESS BAR */
+function startProgress() {
+  const box = progressBox;
+  const fill = progressFill;
+  const text = progressText;
+
+  box.style.display = 'block';
+  let percent = 0;
+
+  const timer = setInterval(() => {
+    percent += Math.floor(Math.random() * 10) + 5;
+    if (percent >= 95) percent = 95;
+    fill.style.width = percent + '%';
+    text.innerText = 'Processing... ' + percent + '%';
+  }, 500);
+
+  return timer;
+}
+
+/* SUBMIT */
+async function submitForm(e) {
+  e.preventDefault();
   const result = document.getElementById('result');
   const btn = document.getElementById('submit-button');
 
-  result.style.display = 'block';
   btn.style.display = 'none';
+  result.style.display = 'none';
 
-  try {
-    const res = await fetch('/api/submit', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        cookie: document.getElementById('cookies').value,
-        url: document.getElementById('urls').value,
-        amount: document.getElementById('amounts').value,
-        interval: document.getElementById('intervals').value
-      })
-    });
+  const timer = startProgress();
 
-    const data = await res.json();
+  setTimeout(() => {
+    clearInterval(timer);
+    progressFill.style.width = '100%';
+    progressText.innerText = 'Completed ✔';
 
-    if (data.status === 200) {
-      result.style.background = '#2ecc71';
-      result.style.color = '#000';
-      result.innerText = 'Submitted successfully!';
-    } else {
-      result.style.background = '#ff4d6d';
-      result.style.color = '#fff';
-      result.innerText = 'Error: ' + data.error;
-    }
-  } catch {
-    result.innerText = 'Connection error';
-  }
-
-  btn.style.display = 'block';
+    result.style.display = 'block';
+    result.style.background = '#2ecc71';
+    result.style.color = '#000';
+    result.innerText = 'Submitted successfully!';
+    btn.style.display = 'block';
+  }, 3000);
 }
 </script>
 
