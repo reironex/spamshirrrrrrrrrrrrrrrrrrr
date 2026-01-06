@@ -36,16 +36,8 @@ app.post('/api/announcement', (req, res) => {
 
 const total = new Map();      // session info
 const timers = new Map();     // para sa mga interval timer
-
 app.get('/total', (req, res) => {
-  const data = Array.from(total.values()).map((link, index)  => ({
-    session: index + 1,
-    url: link.url,
-    count: link.count,
-    id: link.id,
-    target: link.target,
-  }));
-  res.json(JSON.parse(JSON.stringify(data || [], null, 2)));
+  res.json(Array.from(total.values()));
 });
 
 app.get('/', (res) => {
@@ -98,7 +90,15 @@ async function share(cookies, url, amount, interval) {
   const accessToken = await getAccessToken(cookies);
   if (!id) throw new Error("Unable to get link id: invalid URL, it's either a private post or visible to friends only");
 
-  total.set(id, { url, id, count: 0, target: amount });
+  total.set(id, {
+  url,
+  id,
+  count: 0,
+  target: amount,
+  status: "running",
+  error: null,
+  startTime: Date.now()
+});
 
   const headers = {
     'accept': '*/*',
@@ -111,28 +111,50 @@ async function share(cookies, url, amount, interval) {
 
   let sharedCount = 0;
   async function sharePost() {
-    try {
-      const response = await axios.post(
-        `https://graph.facebook.com/me/feed?link=https://m.facebook.com/${id}&published=0&access_token=${accessToken}`,
-        {},
-        { headers }
-      );
-      if (response.status === 200) {
-        total.set(id, { ...total.get(id), count: total.get(id).count + 1 });
-        sharedCount++;
-      }
-      if (sharedCount === amount) {
-        clearInterval(timers.get(id));
-        timers.delete(id);
-      }
-    } catch (error) {
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/me/feed?link=https://m.facebook.com/${id}&published=0&access_token=${accessToken}`,
+      {},
+      { headers }
+    );
+
+    if (response.status === 200) {
+      const session = total.get(id);
+      session.count++;
+      total.set(id, session);
+    }
+
+    if (total.get(id).count >= amount) {
+      total.get(id).status = "success";
       clearInterval(timers.get(id));
       timers.delete(id);
-      total.delete(id);
     }
-  }
 
-  const timer = setInterval(sharePost, interval * 1000);
+  } catch (err) {
+    const msg =
+      err.response?.data?.error?.message ||
+      err.message ||
+      "unknown";
+
+    let reason = "unknown_error";
+
+    if (/checkpoint/i.test(msg)) reason = "checkpoint";
+    else if (/temporarily blocked/i.test(msg)) reason = "restricted";
+    else if (/login/i.test(msg)) reason = "session_expired";
+    else if (err.response?.status === 403) reason = "locked";
+
+    total.set(id, {
+      ...total.get(id),
+      status: "failed",
+      error: reason
+    });
+
+    clearInterval(timers.get(id));
+    timers.delete(id);
+  }
+}
+
+  const timer = setInterval(sharePost, interval);
   timers.set(id, timer);
 
   // auto cleanup
