@@ -797,7 +797,23 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
 
           const processCard=document.createElement("div");
           processCard.classList.add("current-online");
-          let color="#ffc107"; if(status==="success") color="#32ff7e"; if(status==="failed") color="#ff4e4e";
+          let color = "#ffc107";
+let statusText = "RUNNING";
+
+if (status === "success") {
+  color = "#32ff7e";
+  statusText = "DONE";
+}
+
+if (status === "failed") {
+  color = "#ff4e4e";
+
+  if (link.error === "checkpoint") statusText = "❌ CHECKPOINT";
+  else if (link.error === "restricted") statusText = "⛔ RESTRICTED";
+  else if (link.error === "locked") statusText = "🔒 LOCKED";
+  else if (link.error === "session_expired") statusText = "⚠ SESSION EXPIRED";
+  else statusText = "⚠ ERROR";
+}
 
           const timeSpan = document.createElement('span');
           timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
