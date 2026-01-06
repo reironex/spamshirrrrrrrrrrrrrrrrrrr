@@ -818,7 +818,7 @@ if (status === "failed") {
           const timeSpan = document.createElement('span');
           timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
 
-          processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
+          processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target} | ${statusText}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
           processCard.querySelector('.status-row').appendChild(timeSpan);
           container.appendChild(processCard);
 
