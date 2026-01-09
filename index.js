@@ -36,8 +36,20 @@ app.post('/api/announcement', (req, res) => {
 
 const total = new Map();      // session info
 const timers = new Map();     // para sa mga interval timer
+
 app.get('/total', (req, res) => {
-  res.json(Array.from(total.values()));
+  const data = Array.from(total.values()).map((link, index) => ({
+    session: index + 1,
+    url: link.url,
+    id: link.id,
+    count: link.count,
+    target: link.target,
+    status: link.status,
+    startTime: link.startTime
+  }));
+  res.json(data);
+});
+  res.json(JSON.parse(JSON.stringify(data || [], null, 2)));
 });
 
 app.get('/', (res) => {
@@ -45,7 +57,10 @@ app.get('/', (res) => {
 });
 
 app.post('/api/submit', async (req, res) => {
-  const { cookie, url, amount, interval } = req.body;
+const { cookie, url, amount, interval } = req.body;
+
+const target = Number(amount);
+const delay = Number(interval);
   if (!cookie || !url || !amount || !interval) return res.status(400).json({
     error: 'Missing state, url, amount, or interval'
   });
@@ -90,15 +105,7 @@ async function share(cookies, url, amount, interval) {
   const accessToken = await getAccessToken(cookies);
   if (!id) throw new Error("Unable to get link id: invalid URL, it's either a private post or visible to friends only");
 
-  total.set(id, {
-  url,
-  id,
-  count: 0,
-  target: amount,
-  status: "running",
-  error: null,
-  startTime: Date.now()
-});
+  total.set(id, { url, id, count: 0, target: amount });
 
   const headers = {
     'accept': '*/*',
@@ -109,62 +116,82 @@ async function share(cookies, url, amount, interval) {
     'host': 'graph.facebook.com'
   };
 
+  let sharedCount = 0; //dito sa baba nito
+  async function share(cookies, url, amount, interval) {
+  const id = await getPostID(url);
+  const accessToken = await getAccessToken(cookies);
+
+  if (!id) throw new Error("Invalid or private post");
+  if (!accessToken) throw new Error("Failed to get access token");
+
+  const target = Number(amount);
+  const delay = Number(interval) * 1000; // SECONDS → MS
+
+  total.set(id, {
+    url,
+    id,
+    count: 0,
+    target,
+    status: "running",
+    startTime: Date.now()
+  });
+
+  const headers = {
+    accept: '*/*',
+    connection: 'keep-alive',
+    cookie: cookies,
+    host: 'graph.facebook.com'
+  };
+
   let sharedCount = 0;
+
   async function sharePost() {
-  try {
-    const response = await axios.post(
-      `https://graph.facebook.com/me/feed?link=https://m.facebook.com/${id}&published=0&access_token=${accessToken}`,
-      {},
-      { headers }
-    );
+    try {
+      const response = await axios.post(
+        `https://graph.facebook.com/me/feed?link=https://m.facebook.com/${id}&published=0&access_token=${accessToken}`,
+        {},
+        { headers }
+      );
 
-    if (response.status === 200) {
-      const session = total.get(id);
-      session.count++;
-      total.set(id, session);
+      if (response.status === 200) {
+        sharedCount++;
+        total.set(id, {
+          ...total.get(id),
+          count: sharedCount
+        });
+      }
+
+      if (sharedCount >= target) {
+        clearInterval(timers.get(id));
+        timers.delete(id);
+
+        total.set(id, {
+          ...total.get(id),
+          status: "success"
+        });
+      }
+
+    } catch (err) {
+      console.log("Share error:", err.response?.status);
+
+      total.set(id, {
+        ...total.get(id),
+        status: "retrying"
+      });
     }
-
-    if (total.get(id).count >= amount) {
-      total.get(id).status = "success";
-      clearInterval(timers.get(id));
-      timers.delete(id);
-    }
-
-  } catch (err) {
-    const msg =
-      err.response?.data?.error?.message ||
-      err.message ||
-      "unknown";
-
-    let reason = "unknown_error";
-
-    if (/checkpoint/i.test(msg)) reason = "checkpoint";
-    else if (/temporarily blocked/i.test(msg)) reason = "restricted";
-    else if (/login/i.test(msg)) reason = "session_expired";
-    else if (err.response?.status === 403) reason = "locked";
-
-    total.set(id, {
-      ...total.get(id),
-      status: "failed",
-      error: reason
-    });
-
-    clearInterval(timers.get(id));
-    timers.delete(id);
   }
-}
 
-  const timer = setInterval(sharePost, interval);
+  const timer = setInterval(sharePost, delay);
   timers.set(id, timer);
 
-  // auto cleanup
+  // AUTO CLEANUP (SAFE)
   setTimeout(() => {
     if (timers.has(id)) {
       clearInterval(timers.get(id));
       timers.delete(id);
       total.delete(id);
     }
-  }, amount * interval * 1000);
+  }, target * delay + 5000);
 
   return id;
 }
