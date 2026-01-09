@@ -36,19 +36,16 @@ app.post('/api/announcement', (req, res) => {
 
 const total = new Map();      // session info
 const timers = new Map();     // para sa mga interval timer
-
 app.get('/total', (req, res) => {
-  const data = Array.from(total.values()).map((link, index) => ({
-    session: index + 1,
-    url: link.url,
-    id: link.id,
-    count: link.count,
-    target: link.target,
-    status: link.status,
-    startTime: link.startTime
-  }));
-  res.json(data);
-});
+  const data = Array.from(total.values()).map((link, index)  => ({
+  session: index + 1,
+  url: link.url,
+  id: link.id,
+  label: link.label,
+  count: link.count,
+  target: link.target,
+  startTime: link.startTime
+}));
   res.json(JSON.parse(JSON.stringify(data || [], null, 2)));
 });
 
@@ -57,10 +54,7 @@ app.get('/', (res) => {
 });
 
 app.post('/api/submit', async (req, res) => {
-const { cookie, url, amount, interval } = req.body;
-
-const target = Number(amount);
-const delay = Number(interval);
+  const { cookie, url, amount, interval, label } = req.body;
   if (!cookie || !url || !amount || !interval) return res.status(400).json({
     error: 'Missing state, url, amount, or interval'
   });
@@ -70,7 +64,7 @@ const delay = Number(interval);
     if (!cookies) {
       return res.status(400).json({ status: 500, error: 'Invalid cookies' });
     };
-    const id = await share(cookies, url, amount, interval);
+    const id = await share(cookies, url, amount, interval, label);
     res.status(200).json({ status: 200, id });
   } catch (err) {
     return res.status(500).json({ status: 500, error: err.message || err });
@@ -100,13 +94,18 @@ app.post('/api/stop', (req, res) => {
   return res.json({ status: 200, message: 'Lahat ng sessions tinigil na' });
 });
 
-async function share(cookies, url, amount, interval) {
+async function share(cookies, url, amount, interval, label) {
   const id = await getPostID(url);
   const accessToken = await getAccessToken(cookies);
   if (!id) throw new Error("Unable to get link id: invalid URL, it's either a private post or visible to friends only");
-
-  total.set(id, { url, id, count: 0, target: amount });
-
+  total.set(id, {
+  url,
+  id,
+  label,
+  count: 0,
+  target: amount,
+  startTime: Date.now()
+});
   const headers = {
     'accept': '*/*',
     'accept-encoding': 'gzip, deflate',
@@ -116,35 +115,7 @@ async function share(cookies, url, amount, interval) {
     'host': 'graph.facebook.com'
   };
 
-  let sharedCount = 0; //dito sa baba nito
-  async function share(cookies, url, amount, interval) {
-  const id = await getPostID(url);
-  const accessToken = await getAccessToken(cookies);
-
-  if (!id) throw new Error("Invalid or private post");
-  if (!accessToken) throw new Error("Failed to get access token");
-
-  const target = Number(amount);
-  const delay = Number(interval) * 1000; // SECONDS → MS
-
-  total.set(id, {
-    url,
-    id,
-    count: 0,
-    target,
-    status: "running",
-    startTime: Date.now()
-  });
-
-  const headers = {
-    accept: '*/*',
-    connection: 'keep-alive',
-    cookie: cookies,
-    host: 'graph.facebook.com'
-  };
-
   let sharedCount = 0;
-
   async function sharePost() {
     try {
       const response = await axios.post(
@@ -152,46 +123,32 @@ async function share(cookies, url, amount, interval) {
         {},
         { headers }
       );
-
       if (response.status === 200) {
+        total.set(id, { ...total.get(id), count: total.get(id).count + 1 });
         sharedCount++;
-        total.set(id, {
-          ...total.get(id),
-          count: sharedCount
-        });
       }
-
-      if (sharedCount >= target) {
+      if (sharedCount === amount) {
         clearInterval(timers.get(id));
         timers.delete(id);
-
-        total.set(id, {
-          ...total.get(id),
-          status: "success"
-        });
       }
-
-    } catch (err) {
-      console.log("Share error:", err.response?.status);
-
-      total.set(id, {
-        ...total.get(id),
-        status: "retrying"
-      });
+    } catch (error) {
+      clearInterval(timers.get(id));
+      timers.delete(id);
+      total.delete(id);
     }
   }
 
-  const timer = setInterval(sharePost, delay);
+  const timer = setInterval(sharePost, interval * 1000);
   timers.set(id, timer);
 
-  // AUTO CLEANUP (SAFE)
+  // auto cleanup
   setTimeout(() => {
     if (timers.has(id)) {
       clearInterval(timers.get(id));
       timers.delete(id);
       total.delete(id);
     }
-  }, target * delay + 5000);
+  }, amount * interval * 1000);
 
   return id;
 }
