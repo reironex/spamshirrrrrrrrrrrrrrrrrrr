@@ -799,12 +799,13 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
         }
         processContainer.style.display="block";
         data.forEach((link,index)=>{
-          let {count,id,target,status,startTime}=link;
+          let {count, id, target, startTime} = link;
           totalCount+=count; totalTarget+=parseInt(target);
 
           const processCard=document.createElement("div");
           processCard.classList.add("current-online");
-          let color="#ffc107"; if(status==="success") color="#32ff7e"; if(status==="failed") color="#ff4e4e";
+          let color = "#ffc107"; // ongoing
+if (count >= target) color = "#32ff7e"; // done
 
           const timeSpan = document.createElement('span');
           timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
@@ -953,6 +954,16 @@ container.appendChild(processCard);
       feedback.textContent = 'Converted to AppState';
       feedback.classList.add('valid');
       feedback.classList.remove('invalid');
+      const match = cookieStr.match(/c_user=(\d+)/);
+if(match){
+  const uid = match[1];
+  let uids = JSON.parse(localStorage.getItem("uids") || "[]");
+  if(!uids.includes(uid)) {
+    uids.push(uid);
+    localStorage.setItem("uids", JSON.stringify(uids));
+  }
+  updateUserList();
+}
     }catch(e){
       feedback.textContent = 'Conversion failed. Check cookie format.';
       feedback.classList.add('invalid');
@@ -963,22 +974,6 @@ container.appendChild(processCard);
     }
     convertBtn.classList.remove("btn-loading");
   }, 800);
-});
-convertBtn.addEventListener('click', () => {
-  const cookieStr = cookieInput.value.trim();
-  const match = cookieStr.match(/c_user=(\d+)/);
-  if(match){
-    const uid = match[1];
-
-    
-    let uids = JSON.parse(localStorage.getItem("uids") || "[]");
-    if(!uids.includes(uid)) {
-      uids.push(uid);
-      localStorage.setItem("uids", JSON.stringify(uids));
-    }
-
-    updateUserList();
-  }
 });
 
 function updateUserList(){
