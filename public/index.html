@@ -394,11 +394,6 @@ form input[type="password"]:focus {
   transform: translateY(-50%);
   animation: spin 0.8s linear infinite;
 }
-
-@keyframes spin {
-  from { transform: translateY(-50%) rotate(0deg); }
-  to { transform: translateY(-50%) rotate(360deg); }
-}
     #auth-feedback.success {
   border: 2px solid #32ff7e;
   background: rgba(50, 255, 126, 0.1);
@@ -720,14 +715,13 @@ function login() {
       }
       authContainer.style.display = 'none';
       mainForm.style.display = 'block';
-      updateUserCount();
+      updateUserList();
     } else{
      showAuthMessage('Invalid credentials', 'error');
     }
     loginBtn.classList.remove("btn-loading");
   }, 1000); // simulate loading (1s)
 }
-  updateUserCount();
 
   let refreshInterval;
   let liveTimers = [];
@@ -821,8 +815,8 @@ if (count >= target) color = "#32ff7e"; // done
   </div>
 
   <div class="progress-container">
-    <div class="progress-bar" style="width:${(count / target) * 100}%"></div>
-  </div>
+   <div class="progress-bar" style="width:${Math.min((count / target) * 100, 100)}%"></div>
+   </div>
 `;
 
 processCard.querySelector('.status-row').appendChild(timeSpan);
