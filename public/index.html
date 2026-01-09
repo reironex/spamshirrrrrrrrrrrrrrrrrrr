@@ -560,7 +560,7 @@ form input[type="password"]:focus {
 
 <div class="form-group">
   <label class="label-icon">
-    <i class="fa-solid fa-clock"></i> Interval (ms) 
+    <i class="fa-solid fa-clock"></i> Interval (second/s) 
     <span class="tooltip" data-text="Delay between shares in milliseconds">?</span>:
   </label>
   <input type="number" id="intervals" placeholder="Enter Interval" required>
@@ -797,28 +797,12 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
 
           const processCard=document.createElement("div");
           processCard.classList.add("current-online");
-          let color = "#ffc107";
-let statusText = "RUNNING";
-
-if (status === "success") {
-  color = "#32ff7e";
-  statusText = "DONE";
-}
-
-if (status === "failed") {
-  color = "#ff4e4e";
-
-  if (link.error === "checkpoint") statusText = "❌ CHECKPOINT";
-  else if (link.error === "restricted") statusText = "⛔ RESTRICTED";
-  else if (link.error === "locked") statusText = "🔒 LOCKED";
-  else if (link.error === "session_expired") statusText = "⚠ SESSION EXPIRED";
-  else statusText = "⚠ ERROR";
-}
+          let color="#ffc107"; if(status==="success") color="#32ff7e"; if(status==="failed") color="#ff4e4e";
 
           const timeSpan = document.createElement('span');
           timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
 
-          processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target} | ${statusText}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
+          processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
           processCard.querySelector('.status-row').appendChild(timeSpan);
           container.appendChild(processCard);
 
