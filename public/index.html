@@ -453,18 +453,23 @@ form input[type="password"]:focus {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-
-  width: 400px;              /* same size vibe as create account */
+  transform: translate(-50%, -60%); /* start slightly above */
+  width: 400px;
   max-width: 90%;
-
   background: #1a1a27;
   padding: 25px;
   border-radius: 14px;
-
   box-shadow: 0 0 25px rgba(255,78,205,0.4);
-  display: none;
+  opacity: 0;          /* hidden by default */
+  pointer-events: none; /* can't click while hidden */
+  transition: opacity 0.4s ease, transform 0.4s ease; /* smooth fade+slide */
   z-index: 1000;
+}
+
+#admin-panel.show {
+  opacity: 1;             /* visible */
+  transform: translate(-50%, -50%); /* slide to center */
+  pointer-events: auto;   /* allow clicks */
 }
 #admin-panel textarea {
   width: 100%;
@@ -1071,8 +1076,7 @@ async function adminLogin() {
 }
 
 menuBtn.onclick = () => {
-  adminPanel.style.display =
-    adminPanel.style.display === "block" ? "none" : "block";
+  adminPanel.classList.toggle("show");
 };
   async function sendAnnouncement() {
   if (!adminLoggedIn || !adminCredentials) {
@@ -1092,14 +1096,18 @@ menuBtn.onclick = () => {
     return;
   }
 
-  const res = await fetch("/api/announcement", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: user, password: pass, message })
-  });
+  const sendBtn = document.querySelector("#admin-announcement button");
+sendBtn.classList.add("btn-loading"); // ✅ add loading
 
-  const data = await res.json();
+const res = await fetch("/api/announcement", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username: user, password: pass, message })
+});
 
+sendBtn.classList.remove("btn-loading"); // ✅ remove loading
+  
+    const data = await res.json();
   if (res.ok) {
     feedback.textContent = "✅ Announcement sent successfully!";
     feedback.style.color = "#32ff7e";
