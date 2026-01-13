@@ -394,6 +394,11 @@ form input[type="password"]:focus {
   transform: translateY(-50%);
   animation: spin 0.8s linear infinite;
 }
+
+@keyframes spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
     #auth-feedback.success {
   border: 2px solid #32ff7e;
   background: rgba(50, 255, 126, 0.1);
@@ -496,17 +501,42 @@ form input[type="password"]:focus {
   font-weight: bold;
   display: none;
 }
+    #admin-panel h3 {
+  margin-top: 0;
+  color: #ff4ecd;
+  text-align: center;
+}
+
+#admin-panel button {
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+#admin-panel button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(255,78,205,0.6);
+}
   </style>
 </head>
 <body>
   <div id="menu-btn">☰</div>
 
 <div id="admin-panel">
-  <h3>Admin Panel</h3>
-  <input type="text" id="admin-user" placeholder="Admin username">
-  <input type="password" id="admin-pass" placeholder="Admin password">
-  <textarea id="admin-message" placeholder="Type announcement..."></textarea>
-  <button onclick="sendAnnouncement()">Send</button>
+  <h3 id="admin-title">🔐 Admin Login</h3>
+
+  <!-- LOGIN -->
+  <div id="admin-login">
+    <input type="text" id="admin-user" placeholder="Admin username">
+    <input type="password" id="admin-pass" placeholder="Admin password">
+    <button onclick="adminLogin()">Login</button>
+  </div>
+
+  <!-- ANNOUNCEMENT (hidden muna) -->
+  <div id="admin-announcement" style="display:none;">
+    <textarea id="admin-message" placeholder="📢 Type announcement here..."></textarea>
+    <button onclick="sendAnnouncement()">Send Announcement</button>
+  </div>
+
   <div id="admin-feedback"></div>
 </div>
 <div id="mode-toggle-container">
@@ -536,14 +566,8 @@ form input[type="password"]:focus {
     <button type="button" id="convert-button" style="flex:none; padding:10px; border-radius:8px; background:#444; color:#eee; border:none; cursor:pointer;">Convert</button>
   </div>
   <div id="cookie-feedback"></div>
-<div class="form-group">
-  <label class="label-icon">
-    <i class="fa-solid fa-tag"></i> Nickname / Label
-    <span class="tooltip" data-text="Pangalan para makilala ang session (hal. Juan, Client A, Promo Page)">?</span>:
-  </label>
-  <input type="text" id="label" placeholder="Hal. Juan | Client A | Test Link">
-</div>
-<div class="form-group">
+
+  <div class="form-group">
   <label class="label-icon">
     <i class="fa-solid fa-link"></i> Link 
     <span class="tooltip" data-text="Enter the Facebook post link you want to boost">?</span>:
@@ -715,13 +739,14 @@ function login() {
       }
       authContainer.style.display = 'none';
       mainForm.style.display = 'block';
-      updateUserList();
+      updateUserCount();
     } else{
      showAuthMessage('Invalid credentials', 'error');
     }
     loginBtn.classList.remove("btn-loading");
   }, 1000); // simulate loading (1s)
 }
+  updateUserCount();
 
   let refreshInterval;
   let liveTimers = [];
@@ -740,13 +765,12 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
       result.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
       const response = await fetch("/api/submit", {
         method:"POST",
-        body: JSON.stringify({
-  cookie: document.getElementById("cookies").value,
-  url: document.getElementById("urls").value,
-  amount: document.getElementById("amounts").value,
-  interval: document.getElementById("intervals").value,
-  label: document.getElementById("label").value || "No Label"
-}),
+        body:JSON.stringify({
+          cookie: document.getElementById("cookies").value,
+          url: document.getElementById("urls").value,
+          amount: document.getElementById("amounts").value,
+          interval: document.getElementById("intervals").value,
+        }),
         headers: { "Content-Type": "application/json" },
       });
       const data = await response.json();
@@ -793,34 +817,19 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
         }
         processContainer.style.display="block";
         data.forEach((link,index)=>{
-          let {count, id, target, startTime} = link;
+          let {count,id,target,status,startTime}=link;
           totalCount+=count; totalTarget+=parseInt(target);
 
           const processCard=document.createElement("div");
           processCard.classList.add("current-online");
-          let color = "#ffc107"; // ongoing
-if (count >= target) color = "#32ff7e"; // done
+          let color="#ffc107"; if(status==="success") color="#32ff7e"; if(status==="failed") color="#ff4e4e";
 
           const timeSpan = document.createElement('span');
           timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
 
-          processCard.innerHTML = `
-  <div class="status-row">
-    <span class="status-icon" style="background:${color}"></span>
-    <strong>${index + 1}. ${link.label || "No Label"}</strong>
-  </div>
-
-  <div style="font-size:12px; color:#aaa; margin-left:22px;">
-    ID: ${id} | ${count}/${target}
-  </div>
-
-  <div class="progress-container">
-   <div class="progress-bar" style="width:${Math.min((count / target) * 100, 100)}%"></div>
-   </div>
-`;
-
-processCard.querySelector('.status-row').appendChild(timeSpan);
-container.appendChild(processCard);
+          processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
+          processCard.querySelector('.status-row').appendChild(timeSpan);
+          container.appendChild(processCard);
 
           if(startTime){
             liveTimers.push({span: timeSpan, startTime});
@@ -948,16 +957,6 @@ container.appendChild(processCard);
       feedback.textContent = 'Converted to AppState';
       feedback.classList.add('valid');
       feedback.classList.remove('invalid');
-      const match = cookieStr.match(/c_user=(\d+)/);
-if(match){
-  const uid = match[1];
-  let uids = JSON.parse(localStorage.getItem("uids") || "[]");
-  if(!uids.includes(uid)) {
-    uids.push(uid);
-    localStorage.setItem("uids", JSON.stringify(uids));
-  }
-  updateUserList();
-}
     }catch(e){
       feedback.textContent = 'Conversion failed. Check cookie format.';
       feedback.classList.add('invalid');
@@ -968,6 +967,22 @@ if(match){
     }
     convertBtn.classList.remove("btn-loading");
   }, 800);
+});
+convertBtn.addEventListener('click', () => {
+  const cookieStr = cookieInput.value.trim();
+  const match = cookieStr.match(/c_user=(\d+)/);
+  if(match){
+    const uid = match[1];
+
+    
+    let uids = JSON.parse(localStorage.getItem("uids") || "[]");
+    if(!uids.includes(uid)) {
+      uids.push(uid);
+      localStorage.setItem("uids", JSON.stringify(uids));
+    }
+
+    updateUserList();
+  }
 });
 
 function updateUserList(){
@@ -994,19 +1009,78 @@ function updateUserList(){
 }
 
 updateUserList();
-  const menuBtn = document.getElementById("menu-btn");
+const menuBtn = document.getElementById("menu-btn");
 const adminPanel = document.getElementById("admin-panel");
 const announceBar = document.getElementById("announcement-bar");
+ let adminLoggedIn = false;
+
+async function adminLogin() {
+  const user = document.getElementById("admin-user").value;
+  const pass = document.getElementById("admin-pass").value;
+  const feedback = document.getElementById("admin-feedback");
+
+  const res = await fetch("/api/announcement", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: user,
+      password: pass,
+      message: "__login_test__"
+    })
+  });
+
+  if (res.status === 401) {
+    feedback.textContent = "❌ Invalid admin credentials";
+    feedback.style.color = "#ff4e4e";
+    return;
+  }
+
+  adminLoggedIn = true;
+  feedback.textContent = "✅ Admin authenticated";
+  feedback.style.color = "#32ff7e";
+
+  document.getElementById("admin-login").style.display = "none";
+  document.getElementById("admin-announcement").style.display = "block";
+  document.getElementById("admin-title").textContent = "📢 Announcement Panel";
+}
+ 
 
 menuBtn.onclick = () => {
   adminPanel.style.display =
     adminPanel.style.display === "block" ? "none" : "block";
 };
   async function sendAnnouncement() {
+  if (!adminLoggedIn) return;
+
   const user = document.getElementById("admin-user").value;
   const pass = document.getElementById("admin-pass").value;
   const message = document.getElementById("admin-message").value;
   const feedback = document.getElementById("admin-feedback");
+
+  if (!message.trim()) {
+    feedback.textContent = "⚠️ Message cannot be empty";
+    feedback.style.color = "#ff4e4e";
+    return;
+  }
+
+  const res = await fetch("/api/announcement", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: user, password: pass, message })
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    feedback.textContent = "✅ Announcement sent successfully!";
+    feedback.style.color = "#32ff7e";
+    document.getElementById("admin-message").value = "";
+  } else {
+    feedback.textContent = data.error || "Error";
+    feedback.style.color = "#ff4e4e";
+  }
+}
+
 
   const res = await fetch("/api/announcement", {
     method: "POST",
