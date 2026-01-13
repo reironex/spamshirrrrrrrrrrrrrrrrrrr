@@ -1080,22 +1080,6 @@ menuBtn.onclick = () => {
     feedback.style.color = "#ff4e4e";
   }
 }
-
-
-  const res = await fetch("/api/announcement", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: user, password: pass, message })
-  });
-
-  const data = await res.json();
-
-  if (res.ok) {
-    feedback.textContent = "Announcement sent!";
-  } else {
-    feedback.textContent = data.error || "Error";
-  }
-}
   async function loadAnnouncement() {
   const res = await fetch("/api/announcement");
   const data = await res.json();
