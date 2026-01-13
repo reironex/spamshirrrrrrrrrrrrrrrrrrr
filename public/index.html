@@ -1031,11 +1031,7 @@ async function adminLogin() {
   const res = await fetch("/api/announcement", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: user,
-      password: pass,
-      message: "__login_test__"
-    })
+    body: JSON.stringify({ username: user, password: pass, message: "__login_test__" })
   });
 
   if (res.status === 401) {
@@ -1046,6 +1042,10 @@ async function adminLogin() {
 
   adminLoggedIn = true;
   localStorage.setItem("adminLoggedIn", "true");
+
+  // ✅ dito natin sine-save yung credentials
+  adminCredentials = { username: user, password: pass };
+
   feedback.textContent = "✅ Admin authenticated";
   feedback.style.color = "#32ff7e";
 
@@ -1053,7 +1053,6 @@ async function adminLogin() {
   document.getElementById("admin-announcement").style.display = "block";
   document.getElementById("admin-title").textContent = "📢 Announcement Panel";
 }
- 
 
 menuBtn.onclick = () => {
   adminPanel.style.display =
@@ -1062,8 +1061,8 @@ menuBtn.onclick = () => {
   async function sendAnnouncement() {
   if (!adminLoggedIn) return;
 
-  const user = document.getElementById("admin-user").value;
-  const pass = document.getElementById("admin-pass").value;
+  const user = adminCredentials?.username; // ✅ gamit na stored credentials
+  const pass = adminCredentials?.password;
   const message = document.getElementById("admin-message").value;
   const feedback = document.getElementById("admin-feedback");
 
