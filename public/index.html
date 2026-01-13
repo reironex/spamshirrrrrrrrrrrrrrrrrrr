@@ -1016,11 +1016,26 @@ updateUserList();
 const menuBtn = document.getElementById("menu-btn");
 const adminPanel = document.getElementById("admin-panel");
 const announceBar = document.getElementById("announcement-bar");
+// ✅ I-restore admin login status at credentials mula sa localStorage
 let adminLoggedIn = localStorage.getItem("adminLoggedIn") === "true";
+
+let adminCredentials = null;
+
 if (adminLoggedIn) {
-  document.getElementById("admin-login").style.display = "none";
-  document.getElementById("admin-announcement").style.display = "block";
-  document.getElementById("admin-title").textContent = "📢 Announcement Panel";
+  const storedUser = localStorage.getItem("adminUser");
+  const storedPass = localStorage.getItem("adminPass");
+
+  if (storedUser && storedPass) {
+    adminCredentials = { username: storedUser, password: storedPass };
+
+    document.getElementById("admin-login").style.display = "none";
+    document.getElementById("admin-announcement").style.display = "block";
+    document.getElementById("admin-title").textContent = "📢 Announcement Panel";
+  } else {
+    // Kung wala credentials, reset login status
+    localStorage.removeItem("adminLoggedIn");
+    adminLoggedIn = false;
+  }
 }
   
 async function adminLogin() {
@@ -1042,8 +1057,9 @@ async function adminLogin() {
 
   adminLoggedIn = true;
   localStorage.setItem("adminLoggedIn", "true");
-
-  // ✅ dito natin sine-save yung credentials
+  localStorage.setItem("adminUser", user);
+  localStorage.setItem("adminPass", pass);
+  
   adminCredentials = { username: user, password: pass };
 
   feedback.textContent = "✅ Admin authenticated";
@@ -1059,10 +1075,14 @@ menuBtn.onclick = () => {
     adminPanel.style.display === "block" ? "none" : "block";
 };
   async function sendAnnouncement() {
-  if (!adminLoggedIn) return;
+  if (!adminLoggedIn || !adminCredentials) {
+    const feedback = document.getElementById("admin-feedback");
+    feedback.textContent = "❌ Admin credentials missing. Please login again.";
+    feedback.style.color = "#ff4e4e";
+    return;
+  }
 
-  const user = adminCredentials?.username; // ✅ gamit na stored credentials
-  const pass = adminCredentials?.password;
+  const { username: user, password: pass } = adminCredentials;
   const message = document.getElementById("admin-message").value;
   const feedback = document.getElementById("admin-feedback");
 
