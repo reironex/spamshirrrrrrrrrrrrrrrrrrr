@@ -453,19 +453,19 @@ form input[type="password"]:focus {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -60%); /* start slightly above */
+  transform: translate(-50%, -60%);
   width: 400px;
-  max-width: calc(100% - 40px); /* 20px space sa left at right */
+  max-width: calc(100% - 60px); /* ⬅️ mas malaking space sa gilid */
+  margin: 0 30px;              /* ⬅️ dagdag safety spacing */
   background: #1a1a27;
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 0 25px rgba(255,78,205,0.4);
-  opacity: 0;          /* hidden by default */
-  pointer-events: none; /* can't click while hidden */
-  transition: opacity 0.4s ease, transform 0.4s ease; /* smooth fade+slide */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
   z-index: 1000;
 }
-
 #admin-panel.show {
   opacity: 1;             /* visible */
   transform: translate(-50%, -50%); /* slide to center */
@@ -524,6 +524,11 @@ form input[type="password"]:focus {
 #admin-panel button:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 10px rgba(255,78,205,0.6);
+}
+    @media (max-width: 480px) {
+  #admin-panel {
+    padding: 18px;
+  }
 }
   </style>
 </head>
