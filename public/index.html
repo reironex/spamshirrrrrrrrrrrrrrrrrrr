@@ -1171,6 +1171,40 @@ sendBtn.classList.remove("btn-loading"); // ✅ remove loading
 
 setInterval(loadAnnouncement, 3000);
 loadAnnouncement();
+  const sharesNum = document.getElementById('shares-num');
+const sharesList = document.getElementById('shares-list');
+const showSharesBtn = document.getElementById('show-shares');
+
+async function updateShares() {
+  try {
+    const res = await fetch('/total'); // galing sa backend mo, global data
+    const data = await res.json();
+
+    // bilang ng nag-share
+    sharesNum.textContent = data.length;
+
+    // list ng IDs
+    const idList = data.map(item => `ID: ${item.id}`).join('<br>');
+    sharesList.innerHTML = idList;
+  } catch(err) {
+    console.error('Failed to load shares', err);
+  }
+}
+
+// toggle para ipakita o itago ang IDs
+showSharesBtn.addEventListener('click', () => {
+  if(sharesList.style.display === 'none'){
+    sharesList.style.display = 'block';
+    showSharesBtn.textContent = 'Hide IDs';
+  } else {
+    sharesList.style.display = 'none';
+    showSharesBtn.textContent = 'View IDs';
+  }
+});
+
+// auto-update kada 3 seconds para live
+setInterval(updateShares, 3000);
+updateShares();
 </script>
 </body>
 </html>
