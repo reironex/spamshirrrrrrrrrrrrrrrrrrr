@@ -813,16 +813,19 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
     }catch(e){ console.error(e); }
   }
 
-  function formatTimeAgo(startTime){
-    const now = Date.now();
-    const diff = now - startTime;
-    const seconds = Math.floor(diff / 1000);
-    if(seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds/60);
-    if(minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes/60);
-    return `${hours}h ago`;
+  function formatElapsedTime(startTime){
+  const diff = Date.now() - startTime;
+  const totalSeconds = Math.floor(diff / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `⏱ ${hours}:${minutes.toString().padStart(2,"0")}:${seconds.toString().padStart(2,"0")}`;
   }
+  return `⏱ ${minutes}:${seconds.toString().padStart(2,"0")}`;
+}
 
   async function linkOfProcessing(){
     const container=document.getElementById("processing");
@@ -852,7 +855,11 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
           let color="#ffc107"; if(status==="success") color="#32ff7e"; if(status==="failed") color="#ff4e4e";
 
           const timeSpan = document.createElement('span');
-          timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
+timeSpan.style.fontSize = "12px";
+timeSpan.style.color = "#aaa";
+timeSpan.style.marginLeft = "auto";
+timeSpan.style.whiteSpace = "nowrap";
+
 
           processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
           processCard.querySelector('.status-row').appendChild(timeSpan);
@@ -860,7 +867,7 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
 
           if(startTime){
             liveTimers.push({span: timeSpan, startTime});
-            timeSpan.textContent = formatTimeAgo(startTime);
+            timeSpan.textContent = formatElapsedTime(startTime);
           } else timeSpan.textContent = 'Just now';
         });
       
