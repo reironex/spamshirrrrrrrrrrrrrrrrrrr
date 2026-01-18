@@ -453,25 +453,24 @@ form input[type="password"]:focus {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -55%);
-  width: 100%;
-  max-width: 400px;
+  transform: translate(-50%, -60%); /* start slightly above */
+  width: 400px;
+  max-width: calc(100% - 40px); /* 20px space sa left at right */
   background: #1a1a27;
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 0 25px rgba(255,78,205,0.4);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  opacity: 0;          /* hidden by default */
+  pointer-events: none; /* can't click while hidden */
+  transition: opacity 0.4s ease, transform 0.4s ease; /* smooth fade+slide */
   z-index: 1000;
 }
 
 #admin-panel.show {
-  opacity: 1;
-  transform: translate(-50%, -50%);
-  pointer-events: auto;
+  opacity: 1;             /* visible */
+  transform: translate(-50%, -50%); /* slide to center */
+  pointer-events: auto;   /* allow clicks */
 }
-
 #admin-panel textarea {
   width: 100%;
   min-height: 80px;
@@ -526,31 +525,6 @@ form input[type="password"]:focus {
   transform: translateY(-2px);
   box-shadow: 0 0 10px rgba(255,78,205,0.6);
 }
-    @media (max-width: 480px) {
-  #admin-panel {
-    padding: 18px;
-  }
-}
-    .cookie-row {
-  display: flex;
-  gap: 5px;
-  align-items: stretch; /* 🔑 pantay height */
-  margin-bottom: 5px;
-}
-
-.cookie-row input,
-.cookie-row button {
-  height: 44px;          /* 🔑 same height */
-  box-sizing: border-box;
-}
-    #shares-list {
-  max-height: 120px;
-  overflow-y: auto;
-  padding: 5px;
-  background: #1a1a27;
-  border-radius: 6px;
-}
-body.light-mode #shares-list { background: #eee; color: #222; }
   </style>
 </head>
 <body>
@@ -596,7 +570,7 @@ body.light-mode #shares-list { background: #eee; color: #222; }
   <div id="auth-feedback" style="min-height:20px; margin-top:8px; font-weight:bold;"></div>
 <form id="main-form" onsubmit="submitForm(event)" style="display:none;">
   <label class="label-icon"><i class="fa-solid fa-user-lock"></i> AppState <span class="tooltip" data-text="Paste your Facebook AppState or cookie string">?</span>:</label>
-  <div class="cookie-row">
+  <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
     <input type="text" id="cookies" placeholder="Enter AppState or Cookie String" required style="flex:1;">
     <button type="button" id="convert-button" style="flex:none; padding:10px; border-radius:8px; background:#444; color:#eee; border:none; cursor:pointer;">Convert</button>
   </div>
@@ -640,10 +614,12 @@ body.light-mode #shares-list { background: #eee; color: #222; }
   <div id="share-summary"></div>
 </div>
 
-<div id="user-count">
-  <strong>Total User Shares:</strong> <span id="total-shares">0</span>
-  <button id="see-shares" style="margin-left:10px; padding:2px 6px; font-size:12px; cursor:pointer;">See</button>
-  <div id="shares-list" style="margin-top:5px; font-size:12px; display:none; color:#ffc107;"></div>
+<div id="user-count"><strong>Users:</strong> <span id="users-num">0</span></div>
+
+<div id="user-shares" style="max-width:400px; margin:10px auto; background:#1a1a27; padding:10px; border-radius:8px; color:#32ff7e; font-size:14px;">
+  <strong>Number of User Shares:</strong> <span id="shares-num">0</span>
+  <button id="show-shares" style="margin-left:10px; padding:3px 6px; border:none; border-radius:4px; cursor:pointer;">View IDs</button>
+  <div id="shares-list" style="margin-top:8px; font-size:12px; display:none;"></div>
 </div>
 
 <div style="text-align:center; margin:20px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
@@ -825,19 +801,16 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
     }catch(e){ console.error(e); }
   }
 
-  function formatElapsedTime(startTime){
-  const diff = Date.now() - startTime;
-  const totalSeconds = Math.floor(diff / 1000);
-
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `⏱ ${hours}:${minutes.toString().padStart(2,"0")}:${seconds.toString().padStart(2,"0")}`;
+  function formatTimeAgo(startTime){
+    const now = Date.now();
+    const diff = now - startTime;
+    const seconds = Math.floor(diff / 1000);
+    if(seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds/60);
+    if(minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes/60);
+    return `${hours}h ago`;
   }
-  return `⏱ ${minutes}:${seconds.toString().padStart(2,"0")}`;
-}
 
   async function linkOfProcessing(){
     const container=document.getElementById("processing");
@@ -867,11 +840,7 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
           let color="#ffc107"; if(status==="success") color="#32ff7e"; if(status==="failed") color="#ff4e4e";
 
           const timeSpan = document.createElement('span');
-timeSpan.style.fontSize = "12px";
-timeSpan.style.color = "#aaa";
-timeSpan.style.marginLeft = "auto";
-timeSpan.style.whiteSpace = "nowrap";
-
+          timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
 
           processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
           processCard.querySelector('.status-row').appendChild(timeSpan);
@@ -879,7 +848,7 @@ timeSpan.style.whiteSpace = "nowrap";
 
           if(startTime){
             liveTimers.push({span: timeSpan, startTime});
-            timeSpan.textContent = formatElapsedTime(startTime);
+            timeSpan.textContent = formatTimeAgo(startTime);
           } else timeSpan.textContent = 'Just now';
         });
       
@@ -944,8 +913,22 @@ timeSpan.style.whiteSpace = "nowrap";
     return str.split(';').every(c=>c.trim().includes('='));
   }
 
-  /dito
-
+  cookieInput.addEventListener('input', ()=>{
+    const val = cookieInput.value.trim();
+    if(validateCookie(val)){
+      cookieInput.classList.add('valid');
+      cookieInput.classList.remove('invalid');
+      feedback.textContent = 'Valid cookie';
+      feedback.classList.add('valid');
+      feedback.classList.remove('invalid');
+    } else {
+      cookieInput.classList.add('invalid');
+      cookieInput.classList.remove('valid');
+      feedback.textContent = 'Not valid cookie';
+      feedback.classList.add('invalid');
+      feedback.classList.remove('valid');
+    }
+  });
   convertBtn.addEventListener('click', ()=>{
   const cookieStr = cookieInput.value.trim();
   convertBtn.classList.add("btn-loading");
@@ -966,10 +949,9 @@ timeSpan.style.whiteSpace = "nowrap";
       feedback.classList.remove('valid');
       cookieInput.classList.add('invalid');
       cookieInput.classList.remove('valid');
-      convertBtn.classList.remove("btn-loading");
+      convertBtn.classList.remove("btn-loading"); // stop loading
       return;
     }
-    
     try{
       const now = Date.now();
       const appState = cookieStr.split(';').map(c => {
@@ -984,27 +966,12 @@ timeSpan.style.whiteSpace = "nowrap";
           lastAccessed: now
         };
       });
-
-      // show converted AppState
       cookieInput.value = JSON.stringify(appState, null, 2);
       cookieInput.classList.add('valid');
       cookieInput.classList.remove('invalid');
       feedback.textContent = 'Converted to AppState';
       feedback.classList.add('valid');
       feedback.classList.remove('invalid');
-
-      // ✅ extract UID from ORIGINAL cookie string
-      const match = cookieStr.match(/c_user=(\d+)/);
-      if(match){
-        const uid = match[1];
-        let uids = JSON.parse(localStorage.getItem("uids") || "[]");
-        if(!uids.includes(uid)) {
-          uids.push(uid);
-          localStorage.setItem("uids", JSON.stringify(uids));
-        }
-        updateUserList();
-      }
-
     }catch(e){
       feedback.textContent = 'Conversion failed. Check cookie format.';
       feedback.classList.add('invalid');
@@ -1013,13 +980,27 @@ timeSpan.style.whiteSpace = "nowrap";
       cookieInput.classList.remove('valid');
       console.error(e);
     }
-
     convertBtn.classList.remove("btn-loading");
   }, 800);
 });
+convertBtn.addEventListener('click', () => {
+  const cookieStr = cookieInput.value.trim();
+  const match = cookieStr.match(/c_user=(\d+)/);
+  if(match){
+    const uid = match[1];
 
-  /dito
-function updateUserList() {
+    
+    let uids = JSON.parse(localStorage.getItem("uids") || "[]");
+    if(!uids.includes(uid)) {
+      uids.push(uid);
+      localStorage.setItem("uids", JSON.stringify(uids));
+    }
+
+    updateUserList();
+  }
+});
+
+function updateUserList(){
   let uids = JSON.parse(localStorage.getItem("uids") || "[]");
   const usersNum = document.getElementById("users-num");
   usersNum.textContent = uids.length;
@@ -1040,24 +1021,7 @@ function updateUserList() {
   } else {
     listContainer.innerHTML = "";
   }
-
-  // ✅ TOTAL SHARES PANEL
-  fetch('/total')
-    .then(res => res.json())
-    .then(data => {
-      const totalShares = data.reduce((acc, item) => acc + item.count, 0);
-      document.getElementById('total-shares').textContent = totalShares;
-
-      const sharesList = document.getElementById('shares-list');
-      sharesList.innerHTML = data.map((item, i) => `${i+1}. ${item.id} (${item.count}/${item.target})`).join('<br>');
-    });
 }
-
-// ✅ Toggle see/hide shares
-document.getElementById('see-shares').addEventListener('click', ()=>{
-  const sharesList = document.getElementById('shares-list');
-  sharesList.style.display = sharesList.style.display === 'none' ? 'block' : 'none';
-});
 
 updateUserList();
 const menuBtn = document.getElementById("menu-btn");
