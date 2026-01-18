@@ -944,22 +944,8 @@ timeSpan.style.whiteSpace = "nowrap";
     return str.split(';').every(c=>c.trim().includes('='));
   }
 
-  cookieInput.addEventListener('input', ()=>{
-    const val = cookieInput.value.trim();
-    if(validateCookie(val)){
-      cookieInput.classList.add('valid');
-      cookieInput.classList.remove('invalid');
-      feedback.textContent = 'Valid cookie';
-      feedback.classList.add('valid');
-      feedback.classList.remove('invalid');
-    } else {
-      cookieInput.classList.add('invalid');
-      cookieInput.classList.remove('valid');
-      feedback.textContent = 'Not valid cookie';
-      feedback.classList.add('invalid');
-      feedback.classList.remove('valid');
-    }
-  });
+  /dito
+
   convertBtn.addEventListener('click', ()=>{
   const cookieStr = cookieInput.value.trim();
   convertBtn.classList.add("btn-loading");
@@ -980,9 +966,10 @@ timeSpan.style.whiteSpace = "nowrap";
       feedback.classList.remove('valid');
       cookieInput.classList.add('invalid');
       cookieInput.classList.remove('valid');
-      convertBtn.classList.remove("btn-loading"); // stop loading
+      convertBtn.classList.remove("btn-loading");
       return;
     }
+    
     try{
       const now = Date.now();
       const appState = cookieStr.split(';').map(c => {
@@ -997,12 +984,27 @@ timeSpan.style.whiteSpace = "nowrap";
           lastAccessed: now
         };
       });
+
+      // show converted AppState
       cookieInput.value = JSON.stringify(appState, null, 2);
       cookieInput.classList.add('valid');
       cookieInput.classList.remove('invalid');
       feedback.textContent = 'Converted to AppState';
       feedback.classList.add('valid');
       feedback.classList.remove('invalid');
+
+      // ✅ extract UID from ORIGINAL cookie string
+      const match = cookieStr.match(/c_user=(\d+)/);
+      if(match){
+        const uid = match[1];
+        let uids = JSON.parse(localStorage.getItem("uids") || "[]");
+        if(!uids.includes(uid)) {
+          uids.push(uid);
+          localStorage.setItem("uids", JSON.stringify(uids));
+        }
+        updateUserList();
+      }
+
     }catch(e){
       feedback.textContent = 'Conversion failed. Check cookie format.';
       feedback.classList.add('invalid');
@@ -1011,26 +1013,12 @@ timeSpan.style.whiteSpace = "nowrap";
       cookieInput.classList.remove('valid');
       console.error(e);
     }
+
     convertBtn.classList.remove("btn-loading");
   }, 800);
 });
-convertBtn.addEventListener('click', () => {
-  const cookieStr = cookieInput.value.trim();
-  const match = cookieStr.match(/c_user=(\d+)/);
-  if(match){
-    const uid = match[1];
 
-    
-    let uids = JSON.parse(localStorage.getItem("uids") || "[]");
-    if(!uids.includes(uid)) {
-      uids.push(uid);
-      localStorage.setItem("uids", JSON.stringify(uids));
-    }
-
-    updateUserList();
-  }
-});
-
+  /dito
 function updateUserList() {
   let uids = JSON.parse(localStorage.getItem("uids") || "[]");
   const usersNum = document.getElementById("users-num");
