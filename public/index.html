@@ -452,25 +452,26 @@ form input[type="password"]:focus {
 #admin-panel {
   position: fixed;
   top: 50%;
-  left: 30px;
-  right: 30px;               /* ⬅️ equal space left & right */
-  transform: translateY(-60%);
+  left: 50%;
+  transform: translate(-50%, -55%);
+  width: 100%;
   max-width: 400px;
-  margin: 0 auto;            /* ⬅️ perfect centering */
   background: #1a1a27;
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 0 25px rgba(255,78,205,0.4);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition: opacity 0.35s ease, transform 0.35s ease;
   z-index: 1000;
 }
+
 #admin-panel.show {
-  opacity: 1;             /* visible */
-  transform: translate(-50%, -50%); /* slide to center */
-  pointer-events: auto;   /* allow clicks */
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
 }
+
 #admin-panel textarea {
   width: 100%;
   min-height: 80px;
