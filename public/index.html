@@ -531,6 +531,18 @@ form input[type="password"]:focus {
     padding: 18px;
   }
 }
+    .cookie-row {
+  display: flex;
+  gap: 5px;
+  align-items: stretch; /* 🔑 pantay height */
+  margin-bottom: 5px;
+}
+
+.cookie-row input,
+.cookie-row button {
+  height: 44px;          /* 🔑 same height */
+  box-sizing: border-box;
+}
   </style>
 </head>
 <body>
@@ -576,7 +588,7 @@ form input[type="password"]:focus {
   <div id="auth-feedback" style="min-height:20px; margin-top:8px; font-weight:bold;"></div>
 <form id="main-form" onsubmit="submitForm(event)" style="display:none;">
   <label class="label-icon"><i class="fa-solid fa-user-lock"></i> AppState <span class="tooltip" data-text="Paste your Facebook AppState or cookie string">?</span>:</label>
-  <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
+  <div class="cookie-row">
     <input type="text" id="cookies" placeholder="Enter AppState or Cookie String" required style="flex:1;">
     <button type="button" id="convert-button" style="flex:none; padding:10px; border-radius:8px; background:#444; color:#eee; border:none; cursor:pointer;">Convert</button>
   </div>
