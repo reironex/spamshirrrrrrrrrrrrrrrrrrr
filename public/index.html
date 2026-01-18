@@ -525,6 +525,22 @@ form input[type="password"]:focus {
   transform: translateY(-2px);
   box-shadow: 0 0 10px rgba(255,78,205,0.6);
 }
+    #cookies {
+  flex: 1;               /* panatilihin para lumawak */
+  height: 42px;          /* pantay sa button */
+  padding: 10px;         /* content padding */
+  box-sizing: border-box;/* kasama ang padding sa height */
+}
+    #convert-button {
+  height: 42px;                /* pantay sa input */
+  padding: 0 15px;             /* horizontal lang */
+  display: inline-flex;        /* para ma-center ang text vertically */
+  align-items: center;         /* vertical center */
+  justify-content: center;     /* horizontal center */
+  cursor: pointer;
+  border-radius: 8px;          /* optional, rounded corners */
+  flex: none;                  /* hindi lumalawak */
+}
   </style>
 </head>
 <body>
@@ -571,8 +587,8 @@ form input[type="password"]:focus {
 <form id="main-form" onsubmit="submitForm(event)" style="display:none;">
   <label class="label-icon"><i class="fa-solid fa-user-lock"></i> AppState <span class="tooltip" data-text="Paste your Facebook AppState or cookie string">?</span>:</label>
   <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
-    <input type="text" id="cookies" placeholder="Enter AppState or Cookie String" required style="flex:1;">
-    <button type="button" id="convert-button" style="flex:none; padding:10px; border-radius:8px; background:#444; color:#eee; border:none; cursor:pointer;">Convert</button>
+    <input type="text" id="cookies" placeholder="Enter AppState or Cookie String" required>
+    <button type="button" id="convert-button">Convert</button>
   </div>
   <div id="cookie-feedback"></div>
 
