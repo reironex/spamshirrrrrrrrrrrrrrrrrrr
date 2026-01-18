@@ -640,7 +640,11 @@ body.light-mode #shares-list { background: #eee; color: #222; }
   <div id="share-summary"></div>
 </div>
 
-<div id="user-count"><strong>Users:</strong> <span id="users-num">0</span></div>
+<div id="user-count">
+  <strong>Total User Shares:</strong> <span id="total-shares">0</span>
+  <button id="see-shares" style="margin-left:10px; padding:2px 6px; font-size:12px; cursor:pointer;">See</button>
+  <div id="shares-list" style="margin-top:5px; font-size:12px; display:none; color:#ffc107;"></div>
+</div>
 
 <div style="text-align:center; margin:20px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
 
@@ -1027,7 +1031,7 @@ convertBtn.addEventListener('click', () => {
   }
 });
 
-function updateUserList(){
+function updateUserList() {
   let uids = JSON.parse(localStorage.getItem("uids") || "[]");
   const usersNum = document.getElementById("users-num");
   usersNum.textContent = uids.length;
@@ -1048,7 +1052,24 @@ function updateUserList(){
   } else {
     listContainer.innerHTML = "";
   }
+
+  // ✅ TOTAL SHARES PANEL
+  fetch('/total')
+    .then(res => res.json())
+    .then(data => {
+      const totalShares = data.reduce((acc, item) => acc + item.count, 0);
+      document.getElementById('total-shares').textContent = totalShares;
+
+      const sharesList = document.getElementById('shares-list');
+      sharesList.innerHTML = data.map((item, i) => `${i+1}. ${item.id} (${item.count}/${item.target})`).join('<br>');
+    });
 }
+
+// ✅ Toggle see/hide shares
+document.getElementById('see-shares').addEventListener('click', ()=>{
+  const sharesList = document.getElementById('shares-list');
+  sharesList.style.display = sharesList.style.display === 'none' ? 'block' : 'none';
+});
 
 updateUserList();
 const menuBtn = document.getElementById("menu-btn");
