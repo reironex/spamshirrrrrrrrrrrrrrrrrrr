@@ -557,7 +557,23 @@ form input[type="password"]:focus {
   cursor: pointer;
   font-size: 16px;
 }
+    .live-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #aaa;
+}
 
+.live-timer i {
+  animation: rotateClock 1.2s linear infinite;
+  color: #ff4ecd;
+}
+
+@keyframes rotateClock {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
   </style>
 </head>
 <body>
@@ -874,7 +890,8 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
           let color="#ffc107"; if(status==="success") color="#32ff7e"; if(status==="failed") color="#ff4e4e";
 
           const timeSpan = document.createElement('span');
-          timeSpan.style.fontSize="12px"; timeSpan.style.color="#aaa";
+          timeSpan.className = "live-timer";
+          timeSpan.innerHTML = `<i class="fa-solid fa-clock"></i> <span class="time-text"></span>`;
 
           processCard.innerHTML=`<div class="status-row"><span class="status-icon" style="background:${color}"></span>${index+1}. ID: ${id} | ${count}/${target}</div><div class="progress-container"><div class="progress-bar" style="width:${(count/target)*100}%"></div></div>`;
           processCard.querySelector('.status-row').appendChild(timeSpan);
@@ -883,7 +900,7 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
           const realStartTime = startTime || Date.now();
 
 timeSpan.dataset.startTime = realStartTime;
-timeSpan.textContent = formatTimeAgo(realStartTime);
+timeSpan.querySelector('.time-text').textContent = formatTimeAgo(realStartTime);
 liveTimers.push(timeSpan);
         });
       
@@ -903,9 +920,9 @@ liveTimers.push(timeSpan);
     refresh();
     let timeUpdater = setInterval(() => {
   liveTimers.forEach(span => {
-    const start = parseInt(span.dataset.startTime);
-    span.textContent = formatTimeAgo(start);
-  });
+  const start = parseInt(span.dataset.startTime);
+  span.querySelector('.time-text').textContent = formatTimeAgo(start);
+});
 }, 1000);
   }
   linkOfProcessing();
