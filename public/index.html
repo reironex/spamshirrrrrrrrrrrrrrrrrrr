@@ -1194,17 +1194,27 @@ loadAnnouncement();
 const sharesList = document.getElementById('shares-list');
 const showSharesBtn = document.getElementById('show-shares');
 
+const SHARES_KEY = 'userShares'; // new: localStorage key
+
 async function updateShares() {
   try {
-    const res = await fetch('/total'); // galing sa backend mo, global data
+    const res = await fetch('/total'); // current live data
     const data = await res.json();
 
-    // bilang ng nag-share
-    sharesNum.textContent = data.length;
+    // kunin ang dati sa localStorage
+    let savedShares = JSON.parse(localStorage.getItem(SHARES_KEY) || '[]');
 
-    // list ng IDs
-    const idList = data.map(item => `ID: ${item.id}`).join('<br>');
-    sharesList.innerHTML = idList;
+    // merge: idagdag lang yung bagong IDs na wala pa sa savedShares
+    data.forEach(item => {
+      if(!savedShares.includes(item.id)) savedShares.push(item.id);
+    });
+
+    // save back sa localStorage
+    localStorage.setItem(SHARES_KEY, JSON.stringify(savedShares));
+
+    // update display
+    sharesNum.textContent = savedShares.length;
+    sharesList.innerHTML = savedShares.map(id => `ID: ${id}`).join('<br>');
   } catch(err) {
     console.error('Failed to load shares', err);
   }
