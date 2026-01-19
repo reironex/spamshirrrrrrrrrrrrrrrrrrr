@@ -880,10 +880,11 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
           processCard.querySelector('.status-row').appendChild(timeSpan);
           container.appendChild(processCard);
 
-          if(startTime){
-            liveTimers.push({span: timeSpan, startTime});
-            timeSpan.textContent = formatTimeAgo(startTime);
-          } else timeSpan.textContent = 'Just now';
+          const realStartTime = startTime || Date.now();
+
+timeSpan.dataset.startTime = realStartTime;
+timeSpan.textContent = formatTimeAgo(realStartTime);
+liveTimers.push(timeSpan);
         });
       
         summary.innerHTML=`<i class="fa-solid fa-chart-pie"></i> Total Shares: ${totalCount}/${totalTarget}`;
@@ -900,9 +901,12 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
     };
     refreshInterval=setInterval(refresh,1000); 
     refresh();
-    setInterval(()=>{
-      liveTimers.forEach(obj => obj.span.textContent = formatTimeAgo(obj.startTime));
-    },1000);
+    let timeUpdater = setInterval(() => {
+  liveTimers.forEach(span => {
+    const start = parseInt(span.dataset.startTime);
+    span.textContent = formatTimeAgo(start);
+  });
+}, 1000);
   }
   linkOfProcessing();
 
