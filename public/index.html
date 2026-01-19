@@ -798,7 +798,7 @@ function login() {
   updateUserCount();
 
   let refreshInterval;
-  let liveTimers = [];
+  let liveTimers = {};
 
   async function submitForm(event){
     event.preventDefault();
@@ -880,10 +880,16 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
           processCard.querySelector('.status-row').appendChild(timeSpan);
           container.appendChild(processCard);
 
-          if(startTime){
-            liveTimers.push({span: timeSpan, startTime});
-            timeSpan.textContent = formatTimeAgo(startTime);
-          } else timeSpan.textContent = 'Just now';
+          // unique key per session (gamit ID)
+if (!liveTimers[id]) {
+  liveTimers[id] = {
+    span: timeSpan,
+    seconds: 0
+  };
+  timeSpan.textContent = '1s';
+} else {
+  liveTimers[id].span = timeSpan;
+}
         });
       
         summary.innerHTML=`<i class="fa-solid fa-chart-pie"></i> Total Shares: ${totalCount}/${totalTarget}`;
@@ -900,9 +906,12 @@ video.play().catch(e => console.log("Video autoplay blocked, user interaction re
     };
     refreshInterval=setInterval(refresh,1000); 
     refresh();
-    setInterval(()=>{
-      liveTimers.forEach(obj => obj.span.textContent = formatTimeAgo(obj.startTime));
-    },1000);
+    setInterval(() => {
+  Object.keys(liveTimers).forEach(id => {
+    liveTimers[id].seconds++;
+    liveTimers[id].span.textContent = liveTimers[id].seconds + "s";
+  });
+}, 1000);
   }
   linkOfProcessing();
 
