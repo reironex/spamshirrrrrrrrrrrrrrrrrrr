@@ -68,6 +68,11 @@ app.post('/api/submit', async (req, res) => {
       return res.status(400).json({ status: 500, error: 'Invalid cookies' });
     };
     const id = await share(cookies, url, amount, interval, label);
+    allShares.push({
+  id,
+  url,
+  time: Date.now()
+});
     res.status(200).json({ status: 200, id });
   } catch (err) {
     return res.status(500).json({ status: 500, error: err.message || err });
@@ -129,13 +134,6 @@ async function share(cookies, url, amount, interval, label) {
       if (response.status === 200) {
   total.set(id, { ...total.get(id), count: total.get(id).count + 1 });
   sharedCount++;
-
-  // ✅ SAVE EVERY SHARE (KAHIT SAME ID)
-  allShares.push({
-    id,
-    url,
-    time: Date.now()
-  });
 }
       if (sharedCount === amount) {
         clearInterval(timers.get(id));
