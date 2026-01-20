@@ -33,7 +33,7 @@ app.post('/api/announcement', (req, res) => {
 
   res.json({ status: 200, message: "Announcement updated" });
 });
-
+const allShares = []; // 👈 NEW: permanent history
 const total = new Map();      // session info
 const timers = new Map();     // para sa mga interval timer
 app.get('/total', (req, res) => {
@@ -47,6 +47,9 @@ app.get('/total', (req, res) => {
   startTime: link.startTime
 }));
   res.json(JSON.parse(JSON.stringify(data || [], null, 2)));
+});
+app.get('/shares', (req, res) => {
+  res.json(allShares);
 });
 
 app.get('/', (res) => {
@@ -124,9 +127,16 @@ async function share(cookies, url, amount, interval, label) {
         { headers }
       );
       if (response.status === 200) {
-        total.set(id, { ...total.get(id), count: total.get(id).count + 1 });
-        sharedCount++;
-      }
+  total.set(id, { ...total.get(id), count: total.get(id).count + 1 });
+  sharedCount++;
+
+  // ✅ SAVE EVERY SHARE (KAHIT SAME ID)
+  allShares.push({
+    id,
+    url,
+    time: Date.now()
+  });
+}
       if (sharedCount === amount) {
         clearInterval(timers.get(id));
         timers.delete(id);
