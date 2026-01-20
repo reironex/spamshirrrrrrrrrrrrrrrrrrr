@@ -1196,7 +1196,7 @@ const showSharesBtn = document.getElementById('show-shares');
 
 async function updateShares() {
   try {
-    const res = await fetch('/total');
+    const res = await fetch('/shares');
     const data = await res.json();
 
     // ✅ total shares = lahat ng entries
