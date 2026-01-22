@@ -753,11 +753,8 @@ function login() {
      showAuthMessage('Invalid credentials', 'error');
     }
     loginBtn.classList.remove("btn-loading");
-  }, 1000); // simulate loading (1s)
+  }, 1000);
 }
-
-  let refreshInterval;
-  let liveTimers = [];
 
   async function submitForm(event){
     event.preventDefault();
@@ -861,7 +858,6 @@ liveTimers.push(timeSpan);
     };
     refreshInterval=setInterval(refresh,1000); 
     refresh();
-    let timeUpdater = setInterval(() => {
   liveTimers.forEach(span => {
   const start = parseInt(span.dataset.startTime);
   span.querySelector('.time-text').textContent = formatTimeAgo(start);
