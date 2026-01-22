@@ -1036,22 +1036,6 @@ liveTimers.push(timeSpan);
     convertBtn.classList.remove("btn-loading");
   }, 800);
 });
-convertBtn.addEventListener('click', () => {
-  const cookieStr = cookieInput.value.trim();
-  const match = cookieStr.match(/c_user=(\d+)/);
-  if(match){
-    const uid = match[1];
-
-    
-    let uids = JSON.parse(localStorage.getItem("uids") || "[]");
-    if(!uids.includes(uid)) {
-      uids.push(uid);
-      localStorage.setItem("uids", JSON.stringify(uids));
-    }
-
-    updateUserList();
-  }
-});
 
 function updateUserList(){
   let uids = JSON.parse(localStorage.getItem("uids") || "[]");
