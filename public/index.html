@@ -726,11 +726,6 @@ title.addEventListener("click", () => {
   const mainForm = document.getElementById('main-form');
   const usersNum = document.getElementById('users-num');
 
-  function updateUserCount() {
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
-    usersNum.textContent = Object.keys(users).length;
-  }
-
   window.addEventListener('load', () => {
     const loggedInUser = localStorage.getItem('currentUser');
     const rememberedUser = localStorage.getItem('rememberedUser');
