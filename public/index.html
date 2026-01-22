@@ -231,18 +231,6 @@
     #auth-container { display: flex; flex-direction: column; gap: 8px; align-items: center; }
     #auth-container .auth-btns { display: flex; gap: 10px; width: 100%; justify-content: center; }
 
-    #user-count {
-      max-width: 400px;
-      margin: 10px auto;
-      text-align: left;
-      background: #1a1a27;
-      padding: 10px;
-      border-radius: 8px;
-      color: #32ff7e;
-      font-size: 14px;
-      transition: background 0.3s, color 0.3s;
-    }
-    body.light-mode #user-count { background: #eee; color: #222; }
 form input[type="text"],
 form input[type="number"],
 form input[type="password"] {
@@ -724,7 +712,6 @@ title.addEventListener("click", () => {
 
   const authContainer = document.getElementById('auth-container');
   const mainForm = document.getElementById('main-form');
-  const usersNum = document.getElementById('users-num');
 
   window.addEventListener('load', () => {
     const loggedInUser = localStorage.getItem('currentUser');
@@ -804,7 +791,6 @@ function login() {
     loginBtn.classList.remove("btn-loading");
   }, 1000); // simulate loading (1s)
 }
-  updateUserCount();
 
   let refreshInterval;
   let liveTimers = [];
@@ -1032,30 +1018,6 @@ liveTimers.push(timeSpan);
   }, 800);
 });
 
-function updateUserList(){
-  let uids = JSON.parse(localStorage.getItem("uids") || "[]");
-  const usersNum = document.getElementById("users-num");
-  usersNum.textContent = uids.length;
-
-  let listContainer = document.getElementById("uids-list");
-  if(!listContainer){
-    listContainer = document.createElement("div");
-    listContainer.id = "uids-list";
-    listContainer.style.marginTop = "8px";
-    listContainer.style.fontSize = "13px";
-    listContainer.style.color = "#32ff7e";
-    document.getElementById("user-count").appendChild(listContainer);
-  }
-
-  if(uids.length > 0){
-    listContainer.innerHTML = "<strong>Converted UIDs:</strong><br>" + 
-      uids.map((u,i)=> `${i+1}. ${u}`).join("<br>");
-  } else {
-    listContainer.innerHTML = "";
-  }
-}
-
-updateUserList();
 const menuBtn = document.getElementById("menu-btn");
 const adminPanel = document.getElementById("admin-panel");
 const announceBar = document.getElementById("announcement-bar");
