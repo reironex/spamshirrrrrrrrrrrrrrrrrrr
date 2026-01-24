@@ -109,6 +109,22 @@
     .label-icon i { transition: 0.2s; }
     .label-icon:hover i { transform: scale(1.2); color: #fff; }
     
+    .tooltip:hover::after {
+      content: attr(data-text);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      font-size: 12px;
+      z-index: 100;
+    }
+    body.light-mode .tooltip:hover::after { background: #555; color: #fff; }
+
     input {
       width: 100%;
       padding: 10px;
@@ -215,6 +231,18 @@
     #auth-container { display: flex; flex-direction: column; gap: 8px; align-items: center; }
     #auth-container .auth-btns { display: flex; gap: 10px; width: 100%; justify-content: center; }
 
+    #user-count {
+      max-width: 400px;
+      margin: 10px auto;
+      text-align: left;
+      background: #1a1a27;
+      padding: 10px;
+      border-radius: 8px;
+      color: #32ff7e;
+      font-size: 14px;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.light-mode #user-count { background: #eee; color: #222; }
 form input[type="text"],
 form input[type="number"],
 form input[type="password"] {
@@ -349,7 +377,7 @@ form input[type="password"]:focus {
 }
     .btn-loading {
   position: relative;
-  pointer-events: none; /* para hindi ulit ma-click */
+  pointer-events: none;
   opacity: 0.7;
 }
 
@@ -367,6 +395,10 @@ form input[type="password"]:focus {
   animation: spin 0.8s linear infinite;
 }
 
+@keyframes spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
     #auth-feedback.success {
   border: 2px solid #32ff7e;
   background: rgba(50, 255, 126, 0.1);
@@ -381,6 +413,14 @@ form input[type="password"]:focus {
   color: #ff4e4e;
   padding: 6px 10px;
   border-radius: 6px;
+}
+    #convert-button {
+  position: relative; }
+#convert-button.btn-loading {
+  background: linear-gradient(135deg, #32ff7e, #ff4ecd);
+  color: #fff;
+  pointer-events: none; 
+  opacity: 0.7;
 }
 
 #convert-button.btn-loading::after {
@@ -413,35 +453,35 @@ form input[type="password"]:focus {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -60%); /* start slightly above */
+  transform: translate(-50%, -60%); 
   width: 400px;
-  max-width: calc(100% - 40px); /* 20px space sa left at right */
+  max-width: calc(100% - 40px); 
   background: #1a1a27;
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 0 25px rgba(255,78,205,0.4);
-  opacity: 0;          /* hidden by default */
-  pointer-events: none; /* can't click while hidden */
+  opacity: 0;          
+  pointer-events: none; 
   transition: opacity 0.4s ease, transform 0.4s ease; /* smooth fade+slide */
   z-index: 1000;
 }
 
 #admin-panel.show {
-  opacity: 1;             /* visible */
-  transform: translate(-50%, -50%); /* slide to center */
-  pointer-events: auto;   /* allow clicks */
+  opacity: 1;            
+  transform: translate(-50%, -50%); 
+  pointer-events: auto;   
 }
 #admin-panel textarea {
   width: 100%;
   min-height: 80px;
-  resize: vertical; /* vertical lang ang puwedeng i-resize */
+  resize: vertical; 
 }
 
 #admin-panel input,
 #admin-panel textarea,
 #admin-panel button {
-  width: 100%;           /* full width ng panel */
-  box-sizing: border-box; /* kasama sa width ang padding at border */
+  width: 100%;           
+  box-sizing: border-box; 
   margin-bottom: 8px;
   padding: 8px 10px;
   border-radius: 8px;
@@ -455,6 +495,12 @@ form input[type="password"]:focus {
   color: #fff;
   border: none;
   cursor: pointer;
+}
+
+#admin-panel textarea {
+  width: 100%;
+  height: 80px;
+  margin: 8px 0;
 }
 
 #announcement-bar {
@@ -482,7 +528,7 @@ form input[type="password"]:focus {
     .cookie-row {
   display: flex;
   gap: 5px;
-  align-items: stretch; /* important para parehong height ang input at button */
+  align-items: stretch; 
   margin-bottom: 5px;
 }
 
@@ -493,17 +539,17 @@ form input[type="password"]:focus {
   border: 2px solid #2a2a3d;
   background: #2a2a3d;
   color: #eee;
-  box-sizing: border-box; /* critical para pantay */
+  box-sizing: border-box; 
   font-size: 16px;
 }
 
 #convert-button {
-  height: 42px;          /* pantay sa input */
-  min-width: 80px;       /* hindi sobrang liit */
-  max-width: none;       /* walang maximum */
-  width: auto !important;/* override global button width */
-  padding: 0 16px !important; /* override global padding */
-  box-sizing: border-box;      /* kasama ang padding sa height */
+  height: 42px;          
+  min-width: 80px;       
+  max-width: none;       
+  width: auto !important;
+  padding: 0 16px !important; 
+  box-sizing: border-box;      
   border-radius: 8px;
   background: #444;
   color: #eee;
@@ -578,6 +624,7 @@ form input[type="password"]:focus {
   <button type="button" id="convert-button">Convert</button>
 </div>
 <div id="cookie-feedback"></div>
+  <div id="cookie-feedback"></div>
 
   <div class="form-group">
   <label class="label-icon">
@@ -616,6 +663,8 @@ form input[type="password"]:focus {
   <div id="processing"></div>
   <div id="share-summary"></div>
 </div>
+
+<div id="user-count"><strong>Users:</strong> <span id="users-num">0</span></div>
 
 <div id="user-shares" style="max-width:400px; margin:10px auto; background:#1a1a27; padding:10px; border-radius:8px; color:#32ff7e; font-size:14px;">
   <strong>Number of User Shares:</strong> <span id="shares-num">0</span>
@@ -677,6 +726,12 @@ title.addEventListener("click", () => {
 
   const authContainer = document.getElementById('auth-container');
   const mainForm = document.getElementById('main-form');
+  const usersNum = document.getElementById('users-num');
+
+  function updateUserCount() {
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    usersNum.textContent = Object.keys(users).length;
+  }
 
   window.addEventListener('load', () => {
     const loggedInUser = localStorage.getItem('currentUser');
@@ -749,12 +804,14 @@ function login() {
       }
       authContainer.style.display = 'none';
       mainForm.style.display = 'block';
+      updateUserCount();
     } else{
      showAuthMessage('Invalid credentials', 'error');
     }
     loginBtn.classList.remove("btn-loading");
   }, 1000); // simulate loading (1s)
 }
+  updateUserCount();
 
   let refreshInterval;
   let liveTimers = [];
@@ -947,7 +1004,7 @@ liveTimers.push(timeSpan);
       feedback.classList.remove('valid');
       cookieInput.classList.add('invalid');
       cookieInput.classList.remove('valid');
-      convertBtn.classList.remove("btn-loading"); // stop loading
+      convertBtn.classList.remove("btn-loading"); 
       return;
     }
     try{
@@ -981,11 +1038,51 @@ liveTimers.push(timeSpan);
     convertBtn.classList.remove("btn-loading");
   }, 800);
 });
+convertBtn.addEventListener('click', () => {
+  const cookieStr = cookieInput.value.trim();
+  const match = cookieStr.match(/c_user=(\d+)/);
+  if(match){
+    const uid = match[1];
 
+    
+    let uids = JSON.parse(localStorage.getItem("uids") || "[]");
+    if(!uids.includes(uid)) {
+      uids.push(uid);
+      localStorage.setItem("uids", JSON.stringify(uids));
+    }
+
+    updateUserList();
+  }
+});
+
+function updateUserList(){
+  let uids = JSON.parse(localStorage.getItem("uids") || "[]");
+  const usersNum = document.getElementById("users-num");
+  usersNum.textContent = uids.length;
+
+  let listContainer = document.getElementById("uids-list");
+  if(!listContainer){
+    listContainer = document.createElement("div");
+    listContainer.id = "uids-list";
+    listContainer.style.marginTop = "8px";
+    listContainer.style.fontSize = "13px";
+    listContainer.style.color = "#32ff7e";
+    document.getElementById("user-count").appendChild(listContainer);
+  }
+
+  if(uids.length > 0){
+    listContainer.innerHTML = "<strong>Converted UIDs:</strong><br>" + 
+      uids.map((u,i)=> `${i+1}. ${u}`).join("<br>");
+  } else {
+    listContainer.innerHTML = "";
+  }
+}
+
+updateUserList();
 const menuBtn = document.getElementById("menu-btn");
 const adminPanel = document.getElementById("admin-panel");
 const announceBar = document.getElementById("announcement-bar");
-// ✅ I-restore admin login status at credentials mula sa localStorage
+
 let adminLoggedIn = localStorage.getItem("adminLoggedIn") === "true";
 
 let adminCredentials = null;
@@ -1001,7 +1098,7 @@ if (adminLoggedIn) {
     document.getElementById("admin-announcement").style.display = "block";
     document.getElementById("admin-title").textContent = "📢 Announcement Panel";
   } else {
-    // Kung wala credentials, reset login status
+    
     localStorage.removeItem("adminLoggedIn");
     adminLoggedIn = false;
   }
@@ -1061,7 +1158,7 @@ menuBtn.onclick = () => {
   }
 
   const sendBtn = document.querySelector("#admin-announcement button");
-sendBtn.classList.add("btn-loading"); // ✅ add loading
+sendBtn.classList.add("btn-loading");
 
 const res = await fetch("/api/announcement", {
   method: "POST",
@@ -1069,7 +1166,7 @@ const res = await fetch("/api/announcement", {
   body: JSON.stringify({ username: user, password: pass, message })
 });
 
-sendBtn.classList.remove("btn-loading"); // ✅ remove loading
+sendBtn.classList.remove("btn-loading"); 
   
     const data = await res.json();
   if (res.ok) {
@@ -1102,10 +1199,8 @@ async function updateShares() {
     const res = await fetch('/shares');
     const data = await res.json();
 
-    // ✅ total shares = lahat ng entries
     sharesNum.textContent = data.length;
 
-    // ✅ ipakita lahat ng IDs kahit pare-pareho
     sharesList.innerHTML = data
       .map((item, i) => `${i + 1}. ID: ${item.id}`)
       .join('<br>');
@@ -1114,7 +1209,7 @@ async function updateShares() {
   }
 }
 
-// toggle para ipakita o itago ang IDs
+
 showSharesBtn.addEventListener('click', () => {
   if(sharesList.style.display === 'none'){
     sharesList.style.display = 'block';
@@ -1125,7 +1220,7 @@ showSharesBtn.addEventListener('click', () => {
   }
 });
 
-// auto-update kada 3 seconds para live
+
 setInterval(updateShares, 3000);
 updateShares();
 </script>
